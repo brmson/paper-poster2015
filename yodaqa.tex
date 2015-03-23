@@ -52,28 +52,32 @@
 %               THIS IS THE PLACE FOR ABSTRACT
 
 \begin{abstract}
-	Question Answering is a sub-field of information retrieval
-	and information extraction that is recently enjoying renewed
-	popularity, triggered by the popular success of IBM Watson in
+	Question Answering as a sub-field of information retrieval
+	and information extraction is recently enjoying renewed
+	popularity, triggered by the publicized success of IBM Watson in
 	the Jeopardy! competition.  But Question Answering research is
-	now proceeding in several semi-independent tiers related to the
+	now proceeding in several semi-independent tiers depending on the
 	precise task formulation and constraints on the knowledge base,
 	and new researchers entering the field can focus only on
 	various restricted sub-tasks as no modern full-scale software
 	system for QA has been openly available for research so far.
 
-	By our work, we seek to reunite and boost research efforts
-	in Question Answering by providing a modular, open source
-	pipeline for this task --- allowing integration
+	By our YodaQA system that we introduce here,
+	we seek to reunite and boost research efforts
+	in Question Answering, providing a modular, open source
+	pipeline for this task --- allowing integration of
 	various knowledge base paradigms,
-	answer extraction and analysis strategies and using a machine
-	learned model to order the answers.  Within this pipeline,
-	we also supply a reference baseline QA system with solid
-	performance and amenable to further extensions.
-	In this paper, we review alternative open QA platforms,
+	answer production and analysis strategies and using a machine
+	learned models to rank the answers.  Within this pipeline,
+	we also supply a baseline QA system inspired by DeepQA
+	with solid performance
+	and propose a reference experimental setup
+	for easy future performance comparisons.
+
+	In this paper, we review the available open QA platforms,
 	present the architecture of our pipeline,
 	the components of the baseline QA system, and also analyze
-	the system performance on a reference dataset.
+	the system performance on the reference dataset.
 \end{abstract}
 
 
@@ -81,7 +85,8 @@
 %               THIS IS THE PLACE FOR KEYWORDS
 \begin{keywords}
 	Question answering, information retrieval, information extraction,
-	linked data, natural language processing, UIMA, software engineering.
+	linked data, natural language processing, Apache UIMA,
+	software engineering.
 \end{keywords}
 
 %----------------------------------------------------------
@@ -89,21 +94,21 @@
 
 \section{Introduction}
 
-We consider the Question Answering problem --- creating a function of
+We consider the Question Answering problem --- a function of
 unstructured user query that returns the information queried for.
 This is a harder problem than a linked data graph search (which requires
 a precisely structured user query) or a generic search engine (which
 returns whole documents or sets of passages instead of the specific
-information requested).
+information).
 The Question Answering task is however a natural extension of a search
 engine, as currently employed e.g.\ in Google Search \cite{googleKG}
-or personal assistants like Apple Siri, and it has been a natural
-benchmark of general Artificial Intelligence progress with the high
-profile IBM Watson Jeopardy! matches \cite{WatsonOverview}.
+or personal assistants like Apple Siri, and with the high
+profile IBM Watson Jeopardy! matches \cite{WatsonOverview}
+it has became a benchmark of progress in AI research.
 As we are interested in a general purpose QA system, we will consider
 an ``open domain'' general factoid question answering, rather than
-domain-specific applications, though extending in this direction
-is a natural topic for future work.
+domain-specific applications, though we keep flexibility in this direction
+as one of our goals.
 
 Diverse QA system architectures have been proposed in the last 15 years,
 applying different approaches to information retrieval.  A full survey
@@ -113,27 +118,29 @@ basic choices we faced when designing our system.
 Perhaps the most popular approach in QA research has been restricting
 the task to querying structured knowledge bases, typically using the
 RDF paradigm and accessible via SPARQL\@.  The QA problem can
-be then reformulated as a task of translating free-text user query
+be then rephrased as learning a function translating free-text user query
 to a structured lambda expression or SPARQL query. \cite{Semantic2013Berant} \cite{Semantic2014Bordes}
 We prefer to focus on unstructured datasets as the coverage of the system
 as well as domain versatility increases dramatically; building a combined
-portfolio of structured and unstructured datasets is then again a natural
-further extension.
+portfolio of structured and unstructured knowledge bases
+is then again an obvious extension.
 
 When relying on unstructured knowledge bases, a common strategy is to offload
 the information retrieval on an external high-quality web search engine
-like Google or Bing (see e.g.\ the \textbf{Mulder} system \cite{MulderKwok}).
+like Google or Bing (see e.g.\ the \textbf{Mulder} system \cite{MulderKwok}
+or many others).
 We make a point of relying purely on local information sources.
-This makes the task noticeably harder as we index significantly less data and
-search results may not be that well sorted, but we believe the result is a more
-universal system that could be readily refocused on domain specific QA instead
-of open domain trivia questions, and also a system more amenable for scientific
-research as the results are fully reproducible over time.
+While the task becomes noticeably harder,
+%as we index significantly less data and search results may not be that well sorted,
+we believe the result is a more
+universal system that could be readily refocused on a specific domain
+or proprietary knowledge base, and also a system more appropriate as
+a scientific platform as the results are fully reproducible over time.
 
-Finally, a common restriction of the QA problem concerns selecting
-the most relevant answer-bearing passage given a tuple of input question
-and set of candidate passages. \cite{WangQAGrammar}
-Such passage selection problem is certainly
+Finally, a common restriction of the QA problem concerns only selecting
+the most relevant answer-bearing passage, given a tuple of input question
+and set of pre-selected candidate passages \cite{WangQAGrammar}.
+This Answer Sentence Selection task is certainly
 worthwhile as a component of a QA system but does not form a full-fledged
 system by itself.
 It may be argued that returning a whole passage is more useful for the user than a direct narrow answer,
@@ -149,7 +156,7 @@ Specifically, we aim to build a system that
 (A) provides an end-to-end, universal pipeline integrating different
 knowledge base paradigms in a modular fashion;
 (B) is domain flexible and could cater even to the long tail of rarer
-question subjects, therefore has minimum fixed categories and hand-coded rules.
+question subjects, therefore has minimum of fixed categories and hand-coded rules.
 
 In contrast, the classic QA system \textbf{OpenEphyra} \cite{Ephyra2006}
 operates on the basis of fixed question categories with hand-crafted rules,
@@ -166,23 +173,23 @@ is a promising set of loosely coupled QA-related methods
 and algorithms, focused on machine learning of textual entailment.  It is
 not meant to be a full QA framework and using it as an end-to-end pipeline
 is not straightforward, but integration of the Jacana implementation as
-modules in YodaQA is one of our long-term plans.
+modules in YodaQA is our long-term plan.
 
-\textbf{OpenQA} \cite{OpenQA} is a recent end-to-end QA pipeline platform
+\textbf{OpenQA} \cite{OpenQA} is a recently introduced end-to-end QA pipeline platform
 also developed independently during the course of our work, and shares our
-goal to become a common research platform in the field.  However, the approach
-is very different, as OpenQA seems more of a portfolio-based engine with
-several independent pipelines which have their results combined, while YodaQA
-emphasizes modularity on pipeline stage level, with e.g.\ all answer generators
-sharing a common answer analysis stage.
+goal of a common research platform in the field.  However, the approach
+is very different, as OpenQA is more of a portfolio-style engine with
+mostly independent pipelines which have their candidate answers combined,
+while YodaQA emphasizes modularity on the pipeline stage level,
+with e.g.\ all answer producers sharing a common answer analysis stage.
 
-The rest of this paper is structured as follows.  We outline the general structure
+The rest of the paper is structured as follows.  We outline the general structure
 of our framework in Sec.~\ref{sec:yodaqaarch}.  We then
 describe the current reference implementation of the pipeline components
-we distribute with our framework in Sec.~\ref{sec:yodaqarefpip}, and
-show the performance contributions of individaul modules and overall
-system performance in Sec.~\ref{sec:results}.  We conclude with a summary
-of our work and outline of future extensions in Sec.~\ref{sec:conclusion}.
+in Sec.~\ref{sec:yodaqarefpip}.  We propose a common experimental setup
+and analyze the system performance in Sec.~\ref{sec:results}.
+We conclude with a summary of our contributions
+and an outline of future extensions in Sec.~\ref{sec:conclusion}.
 
 \begin{figure*}[ht]
 \begin{center}
@@ -199,36 +206,36 @@ of our work and outline of future extensions in Sec.~\ref{sec:conclusion}.
 
 The goals for our system ``brmson YodaQA'' are to provide an open source
 Question Answering platform that can serve both as scientific research
-testbed and a practical system. The pipeline is implemented in Java,
-using the popular Apache UIMA framework \cite{UIMA}.
-Unlike OAQA, in YodaQA each artifact (question, search result, passage,
-candidate answer) is represented as a separate UIMA CAS, allowing natural
-parallelization and easy leverage of numerous pre-existing NLP UIMA components;
-in contrast to OAQA, we put an emphasis at aggressive compartmentalization
-of different tasks to interchangeable UIMA annotators rather than using it
-just for a very high level pipeline flow and annotation storage.
+testbed and a practical system. The pipeline is implemented mainly in Java,
+using the popular Apache UIMA framework \cite{UIMA}.  Extensive support
+tooling is included within the package.
 
-The framework is split into several packages: \textbf{io} takes care
+Unlike OAQA, in YodaQA each artifact (question, search result, passage,
+candidate answer) is represented as a separate UIMA CAS, allowing easy
+parallelization and easy leverage of pre-existing NLP UIMA components;
+we also put emphasis on aggressive compartmentalization
+of different tasks to interchangeable annotators rather than using
+UIMA just for high level flow and annotation storage.
+
+The framework is split in several Java packages: \textbf{io} takes care
 of retrieving questions and returning answers, \textbf{pipeline} contains
-classes for the general pipeline stages, \textbf{analysis} contains
+classes of the general pipeline stages, \textbf{analysis} contains
 modules for various analysis steps, \textbf{provider} has interfaces
 to various external resources and \textbf{flow} carries UIMA helper classes.
 
 The system maps an input question to ordered list of answer candidates in a pipeline fashion,
-with the flow as in Fig.~\ref{fig:arch}, encompassing:
+with the flow as in Fig.~\ref{fig:arch}, encompassing the following stages:
 
 \begin{itemize}
 \item \textbf{Question Analysis} extracts natural language features from the question text and produces QA features based on them (clues, type, etc.).
 \item \textbf{Answer Production} generates candidate answers based on the question.
-	Typically, this happens by performing a search (the \textbf{Primary Search}) in a knowledge base according to the question clues,
-	and either directly using search results as candidate answers (especially in structured knowledge bases)
-	or filtering relevant passages from these (the \textbf{Passage Extraction})%
-\footnote{We have an infrastructure prepared for machine learning models scoring candidate passages,
-		but they are not employed in the current version.}
-	and generating candidate answers from these passages (the \textbf{Passage Analysis}).
+	Typically, this happens by performing a \textbf{Primary Search} in the knowledge bases according to the question clues,
+	and either directly using search results as candidate answers
+	or filtering relevant passages from these (the \textbf{Passage Extraction})
+	and generating candidate answers from picked passages (the \textbf{Passage Analysis}).
 \item \textbf{Answer Analysis} generates various answer features based on detailed analysis (most importantly, type determination and coercion to question type).
-\item \textbf{Answer Merging and Scoring} consolidates the set of answers, removing duplicates and using a machine learned classifier to score answers based on their features.
-\item \textbf{Successive Refining} prunes the set of questions in multiple phases, interjecting some auxiliary tasks (evidence diffusion and gathering some additional evidence).
+\item \textbf{Answer Merging and Scoring} consolidates the set of answers, removing duplicates and using a machine learned classifier to score answers by their features.
+\item \textbf{Successive Refining} (optional) prunes the set of questions in multiple phases, interjecting some extra tasks (evidence diffusion and gathering additional evidence).
 \end{itemize}
 
 The basic pipeline flow is much inspired by the DeepQA model
@@ -244,9 +251,9 @@ The particular Question Answering problem considered in the reference
 pipeline is finding a precise (narrowly phrased) answer to a naturally
 phrased English question, based on both unstructured (English Wikipedia,
 \textit{enwiki})
-and structured (DBpedia \cite{dbpedia}, Freebase \cite{freebase}) datasets.
+and structured (DBpedia \cite{dbpedia}, Freebase \cite{freebase}) knowledge bases.
 
-In our pipeline, we build upon existing third-party NLP analysis tools,
+In our pipeline, we build on existing third-party NLP analysis tools,
 in particular Stanford CoreNLP (Segmenter, POS-Tagger, Parser) \cite{StanfordCoreNLP} \cite{StanfordNNParser},
 OpenNLP (Segmenter, NER) \cite{OpenNLP} and LanguageTool (Segmenter, Lemmatizer).%
 \footnote{\url{http://www.languagetool.org/}}%
@@ -254,36 +261,36 @@ OpenNLP (Segmenter, NER) \cite{OpenNLP} and LanguageTool (Segmenter, Lemmatizer)
 NLP backends to perform the same task, e.g.\ segmentation,
 based on empirically determined best fit.}
 NLP analysis backends are freely interchangeable thanks
-to the DKPro UIMA interface. \cite{DKPro}
+to the DKPro UIMA interface \cite{DKPro}.
 For semantic analysis, we also rely heavily on the WordNet lexicon \cite{WordNet}.
 
-For practical examples of the pipeline contents in two particular cases,
-see tables~\ref{tab:exEnder} and~\ref{tab:exIditarod}.
+For a practical illustration of the pipeline processing two particular example questions,
+please follow Fig.~\ref{fig:exEnder} and~\ref{fig:exIditarod}.
 
 
 \subsection{Question Analysis}
 
-During question analysis, we take the question text,
-produce a part-of-speech tagging and dependency parse,
-detect named entities and based on this,
-as roughly inspired by the DeepQA system \cite{WatsonQuestion}
-we generate several QA features: Clues, Focus, and LAT.
+During question analysis,
+produce a part-of-speech tagging and dependency parse of the question text,
+recognize named entities and,
+roughly inspired by the DeepQA system \cite{WatsonQuestion},
+heuristically generate several QA features: Clues, Focus, and LAT.
 
 \textbf{Clues} represent keywords in the question that determine its content
-and are used for generating candidate answers.
-Clues based on different question components have different weight
+and are used to query for candidate answers.
+Clues based on different question components are assigned different weight
 (used in search retrieval and passage extraction, determined empirically) ---
-in ascending other, all noun phrases, noun tokens and the selection verb;
+in ascending other, all noun phrases, noun tokens and the selection verb (SV);
 the LAT (see below);
 named entities;
 the question sentence subject (determined by dependency parse).
 If the clue text corresponds to an \textit{enwiki} article name or redirect alias,
-its weight is boosted and is flagged as a \textbf{concept clue}.
+its weight is boosted and it is flagged as a \textbf{concept clue}.
 
-\textbf{Focus} is the focus point of the question sentence
-indicating the constraint of a subject that is being queried.
-Six simple hand-crafted heuristics based on the dependency parse extract the focus.
-``name of ---'' constructions are also traversed.
+\textbf{Focus} is the center point of the question sentence
+indicating the queried object.
+Six simple hand-crafted heuristics extract the focus based on the dependency parse.
+``name of ---'' constructions are traversed.
 
 \textbf{LAT} (Lexical Answer Type) describes a type of the answer that would fit the question.
 This type is not of a pre-defined category but may be an arbitrary English noun,
@@ -296,60 +303,62 @@ and adverbs (like ``hot'') are nominalized (to ``temperature'') using WordNet re
 
 The primary source of answers in our QA system is keyword search in free-text knowledge base,
 in our default setting the \textit{enwiki}.
-While these are unstructured per se, we take advantage of the organization of the \textit{enwiki} corpus
+While the information has no formal structure, we take advantage of the organization of the \textit{enwiki} corpus
 where entity descriptions are stored in articles that bear the entity name as title
-and the first sentence is typically the most informative short description of the entity.
+and the first sentence is typically an informative short description of the entity.
 Our search strategies are analogous to basic DeepQA free-text information retrieval methods \cite{WatsonIR}.
 We use the Apache Solr\footnote{\url{http://lucene.apache.org/solr/}} search engine (frontend to Apache Lucene).
 
-\textbf{Title-in-clue search} \cite{WatsonIR} searches the question clues in the article titles,
-essentially looking for articles that describe the concepts touched in the question.
+\textbf{Title-in-clue search} \cite{WatsonIR} looks for the question clues in the article titles,
+essentially aiming to find articles that describe the concepts touched in the question.
 The first sentence of the top six articles (which we assume is its summary)
 is then used in passage analysis (see below).
 
 \textbf{Full-text search} \cite{WatsonIR} runs a full-text clue search in the article texts and titles,
 considering the top six results.
-The document texts are split to sentences which are considered as separate passages
-and scored based on sum of weights of clues occuring in the passage\footnote{%
-The \textit{about-clues} which occur in the document title have their weight divided by four (as empirically determined).};
+The document texts are split to sentences which are treated as separate passages
+and scored based on sum of weights of clues occuring in each passage\footnote{%
+The \textit{about-clues} which occur in the document title have their weight divided by four (as determined empirically).}%
+\footnote{We also carry an infrastructure for machine learning models scoring candidate passages,
+		but they have not been improving performance so far.};
 the top three passages from each document are picked for passage analysis.
 
 \textbf{Document search} \cite{WatsonIR} runs a full-text clue search in the article texts;
 top 20 article hits are then taken as potential responses,
 represented as candidate answers by their titles.
 
-\textbf{Concept search} retrieves articles whose titles (or redirect aliases) exactly match clues in questions.
+\textbf{Concept search} retrieves articles whose titles (or redirect aliases) exactly match a question clue.
 The first sentence and also passages extracted as in the full-text search are used for passage analysis.
 
-Given a selected passage, the passage analysis process runs an NLP pipeline and generates candidate answers,
-currently by simply converting all named entities and noun phrases in the passage to candidate answers.
-Also, objects in sentences where subject is the question LAT are converted to candidate answers.
+Given a picked passage, the \textbf{passage analysis} process executes an NLP pipeline and generates candidate answers;
+currently, the answer extraction strategy entails simply converting all named entities and noun phrases to candidate answers.
+Also, object constituents in sentences where subject is the question LAT are converted to candidate answers.
 
 \subsection{Structured Answer Sources}
 
 Aside of full-text search, we also employ structured knowledge bases organized in RDF triples;
-for each concept clue in the question, we query for all properties with this clue as a subject
-and generate candidate answers for each object in such a triple, with the property label seeded as the LAT of the answer.
+for each concept clue, we query for predicates with this clue as a subject
+and generate candidate answers for each object in such a triple, with the predicate label seeded as one LAT of the answer.
 
 In particular, we query the DBpedia \texttt{ontology} (curated) and \texttt{property} (raw infobox)
-namespaces and Freebase RDF export.
-Due to performance reasons, we limit the number of queried Freebase topics to 5 and retrieve only 40 properties per each;
+namespaces and the Freebase RDF dump.
+For performance reasons, we limit the number of queried Freebase topics to 5 and retrieve only 40 properties per each;
 due to this limitation, we have manually compiled a blacklist of skipped
-``spammy'' properties based on past behavior analysis
-(e.g.\ location \textit{people\_born\_here} or music artist \textit{track}).
+``spammy'' properties based on past system behavior analysis
+(e.g.\ location's \textit{people\_born\_here} or music artist's \textit{track}).
 
 \subsection{Answer Analysis}
 
-During the answer analysis, the system takes a closer look at the answer snippet
+In the answer analysis, the system takes a closer look at the answer snippet
 and generates numerous features for each answer.
 The dominant task here is type coercion,
-i.e.\ verification whether the answer type matches the question LAT.
+i.e.\ checking whether the answer type matches the question LAT.
 
-The answer LAT may be generated by multiple strategies:
+The answer LAT is produced by multiple strategies:
 \begin{itemize}
-	\item Answers generated by a named entity recognizer will have LAT corresponding to the triggering model;
-		we use OpenNLP NER models \textit{date}, \textit{location}, \textit{money}, \textit{organization}, \textit{percentage}, \textit{person} and \textit{time}.
-	\item Answers containing a number will have a generic \textit{quantity} LAT generated.
+	\item Answers generated by a named entity recognizer have LAT corresponding to the triggering model;
+		we use stock OpenNLP NER models \textit{date}, \textit{location}, \textit{money}, \textit{organization}, \textit{percentage}, \textit{person} and \textit{time}.
+	\item Answers containing a number have a generic \textit{quantity} LAT generated.
 	\item Answer focuses (the parse tree roots) are looked up in WordNet and \textit{instance-of} pairs are used to generate LATs (e.g.\ \textit{Einstein} is \textit{instance-of} \textit{scientist}).
 	\item Answer focuses are looked up in DBpedia and its ontology is used to generate LATs.
 	\item Answers originating from a structured knowledge base carry the property name as an LAT.
@@ -365,19 +374,19 @@ based on past behavior analysis, we have manually compiled a further blacklist
 of WordNet synsets that are never accepted as coercing generalizations
 (e.g. \textit{trait} or \textit{social group}).
 
-The generated features describe the origin of the answer (datasource, result score, clues of which type matched in the passage, distance-based score of adjacent clue occurences, etc.), syntactic overlaps with question clues and type coercion scores (what kind of LATs have been generated, whether any type coercion succeeded and what is the WordNet specificity).
+The generated features describe the origin of the answer (data source, search result score, clues of which type matched in the passage, distance-based score of adjacent clue occurences, etc.), syntactic overlaps with question clues and type coercion scores (what kind of LATs have been generated, if any type coercion succeeded, what is the WordNet specificity and whether either LAT had to be generalized).
 
 \subsection{Answer Merge-and-Score}
 
-The merging and scoring process also roughly follows the DeepQA approach \cite{WatsonScoring}.
+The merging and scoring process also basically follows a simplified DeepQA approach \cite{WatsonScoring}.
 Candidate answers of the same text (up to basic normalization, like \textit{the-} removal) are merged;
 element-wise maximum is taken as the resulting answer feature vector
 (except for the \texttt{\#occurences} feature, where a sum is taken).
-To avoid overfitting, too rare features are excluded
+To reduce overfitting, too rare features are excluded
 (when they occur in less than $1\%$ questions and $0.1\%$ answers).
 
 Supplementary features are produced for each logical feature --- aside of the original value,
-a binary feature denoting whether a feature has not been generated
+a binary feature denoting whether a feature has \textit{not} been generated
 and a value normalized over the full set of answers
 so that the distribution of the feature values over the answer
 has mean 0 and standard deviation 1.
@@ -386,7 +395,7 @@ using a logistic regression classifier.
 The weight vector is trained on the gold standard of a training dataset,
 employing L2 regularization objective.  To strike a good precision-recall
 balance, positive answers (which are about $p=0.03$ portion of the total)
-are weighed by $0.5/p$, similar to what the DeepQA team reported \cite{WatsonScoring}.
+are weighed by $0.5/p$.
 
 \subsection{Successive Refining}
 
@@ -396,30 +405,28 @@ only the top 25 answers are kept with the intent of reducing noise for the next 
 Answers are compared and those overlapping syntactically (prefix, suffix, or substring aligned with sub-phrase boundaries)
 are subject to evidence diffusion where their scores are used as features of the overlapping answers.
 Another answer scoring would be then performed, and the answer with the highest score is then finally output by the system.%
-\footnote{There is also experimental support for additional evidence gathering phase, where the top 5 answers are looked up using the full-text search together with the question clues, and the number and score of hits are used as additional answer features and final answer rescoring is performed.  However, we have not found this approach effective.}
+\footnote{There is also experimental support for additional evidence gathering phase, where the top 5 answers are looked up using the full-text search together with the question clues, and the number and score of hits are used as additional answer features and final answer rescoring is performed.  Nevertheless, we have not found this approach effective.}
 
 However, while we have found these extra scoring steps beneficial with
 weaker pipelines (in particular without the clue overlap features),
 in the final pipeline configuration the re-scoring triggers significant
-overfitting on the training set and we therefore do not include
-successive refining in the benchmarked pipeline.
+overfitting on the training set and we therefore ignore
+the successive refining stage in the benchmarked pipeline.
 
 
 \section{Performance Analysis}
 \label{sec:results}
 
-We shall present performance analysis of our system.
-First, we detail our experimental setup, which is designed such that
-others can reproduce our results therefore precisely measure performance
-gain provided by their extensions and strategies embedded in the system;
-this also includes details on our question dataset.
+As we present performance analysis of our system,
+we shall first detail our experimental setup;
+this also includes discussion of our question dataset.
 
 Then, we proceed with the actual results --- we measure the \textit{recall}
 of the system (whether a correct answer has been generated and considered,
 without regard to its score) and \textit{accuracy-at-one} (whether the
 correct answer has been returned as the top answer by the system).
-We find this preferrable to classical IR measures like MRR or MAP
-since in many applications only the single top answer output by the system
+We find this preferrable to typical information retrieval measures like MRR or MAP
+since in many applications, eventually only the single top answer output by the system
 matters; however, we also show the \textit{mean reciprocial rank}
 for each configuration and discuss the rank distribution of correct answers.
 
@@ -432,29 +439,30 @@ impact of its various components (hold-out testing).
 Our code is version tracked in a public GitHub repository
 \url{https://github.com/brmson/yodaqa}, and the experiments presented
 here are based on commit \texttt{f6c0cf6} (tagged as \texttt{v1.0}).
-The quality of full-text search is co-determined by Solr version,
-we use 4.6.0, and models of various NLP components which are brought
+The quality of full-text search is co-determined by Solr version
+(we use 4.6.0) and models of the various NLP components which are brought
 in by DKPro version 1.7.0.
 As for the knowledge bases, we use enwiki-20150112, DBpedia 2014,
 Freebase RDF dump from Jan 11 2015, and WordNet 3.1.
 Detailed instructions on setting up the same state locally (including
 download of the particular dump versions and configuration files) are
-available in the documentation distributed along the source code.
+distributed along the source code.
 
 As a benchmark of the system performance, we use a dataset of 430 training
 and 430 testing open domain factoid questions.
 (For system development, exclusively questions from the training set are used.)
-This dataset is based on public question answering benchmark from
-main tasks of the TREC 2001 and 2002 QA tracks
+This dataset is based on the public question answering benchmark from
+the main tasks of the TREC 2001 and 2002 QA tracks
 with regural expression answer patterns%
 \footnote{\url{http://trec.nist.gov/data/qa/2001_qadata/main_task.html} and 2002 analogically.}
 and extended by questions asked
-to a YodaQA predecessor by random internet users via an IRC interface.
-This dataset was further reviewed, ambiguous or outdated questions were
-removed and the regex patterns were updated based on current data.
+to a YodaQA predecessor by internet users via an IRC interface.
+This dataset was further manually reviewed by the author,
+ambiguous or outdated questions were removed
+and the regex patterns were updated based on current data.
 We refer to the resulting 867 question dataset as \texttt{curated} and
-randomly split it to the training and testing sets; randomly remaining
-7 questions were left unused for now.
+randomly split it to the training and testing sets.\footnote{The remaining
+7 questions are left unused for now.}
 
 An automatic benchmark evaluation system is distributed as part of the
 YodaQA software package.  The system evaluates the training and test questions
@@ -465,16 +473,15 @@ specifically for that version is used for scoring answers.
 Our benchmark is influenced by two sources of noise.
 First, the answer correctness is determined automatically by matching a predefined regex,
 but this may yield both false positives and false negatives.%
-\footnote{For example numerical quantities with varying formatting and units are notoriously tricky to match.}
+\footnote{For example numerical quantities with varying formatting and units are notoriously tricky to match by a regular expression.}
 Second, during training the models are randomly initialized and therefore their final
-performance on a testing set drifts a little.
+performance on a testing set flutters a little.
 
 \subsection{Benchmark Results}
 
-\begin{table*}[t]
+\begin{figure*}[t]
 % increase table row spacing, adjust to taste
 \renewcommand{\arraystretch}{1.3}
-\label{tab:bench}
 \centering
 \begin{tabular}{|c|cccc|}
 \hline
@@ -543,8 +550,9 @@ clue overlap test hold-out & 79.3\% & 29.5\% & 0.390 & 30.1s \\
 \end{tabular}
 \vspace*{-0.2cm}
 \captionwide{Benchmark results of various pipeline variants on the \textit{curated} test dataset.
-MRR is the Mean Reciprocal Rank $|Q|\cdot\sum_{q\in Q}{1/r_q}$, time is the time spend answering one question.}
-\end{table*}
+MRR is the Mean Reciprocal Rank $|Q|\cdot\sum_{q\in Q}{1/r_q}$, time is the average time spent answering one question.}
+\label{fig:bench}
+\end{figure*}
 
 \begin{figure}[t]
 \begin{center}
@@ -555,7 +563,7 @@ MRR is the Mean Reciprocal Rank $|Q|\cdot\sum_{q\in Q}{1/r_q}$, time is the time
 \end{center}
 \end{figure}%\vspace{5mm}
 
-Benchmark results over various pipeline configurations are shown in Fig.~\ref{tab:bench}.
+Benchmark results over various pipeline configurations are laid out in Fig.~2. %\ref{fig:bench}.
 Aside of the general performance of the system,
 it is instructive to look at the histogram of answer ranks
 for the default pipeline, shown in Fig.~\ref{fig:ranks}.
@@ -565,7 +573,7 @@ accuracy-at-five is already at 52.7\% of test questions.
 The information retrieval parameters of the default pipeline are selected so
 that answering a question takes about 30s on average on a single core of
 AMD FX-8350 with 24GB RAM and SSD backed databases.
-(Please note that no computation pre-processing was done on the knowledge bases or datasets;
+(Note that no computation pre-processing was done on the knowledge bases or datasets;
 bulk of the time per question is therefore spent querying the search engine and parsing sentences,
 making it an accurate representation of time spent on previously unseen questions.)
 By raising the limiting
@@ -583,7 +591,7 @@ our QA system.
 Comparison of performance across multiple systems is currently non-trivial,
 unfortunately, as there is no universally agreed experimental setup so far
 and not even published results on the TREC datasets
-from the years we use are readily available at any rate.
+from the years we use are readily available.
 OpenEphyra seemed to typically achieve accuracy-at-one of ``above 25\%'' on
 the TREC datasets including our years according to \cite{Ephyra2006}.
 In the Answer Sentence Selection task \cite{WangQAGrammar},
@@ -617,6 +625,8 @@ and available for research collaboration on the GitHub social software hosting s
 We hope for our system to become an universal research platform for testing
 of various question answering related strategies not only in isolation but also
 measuring their effect in a real-world high performance end-to-end pipeline.
+We also hope our work helps to clarify which of the numerous DeepQA
+contributions are most essential to a minimal working modern QA system.
 
 
 \subsection{Future Work}
@@ -718,7 +728,6 @@ and supported by the CTU grant SGS14/194/ OHK3/3T/13 ``Automatic adaptation of s
 \begin{figure}[t!]
 % increase table row spacing, adjust to taste
 \renewcommand{\arraystretch}{1.3}
-\label{tab:exEnder}
 \centering
 \footnotesize
 \begin{tabular}{|p{1.8cm}p{6cm}|}
@@ -752,12 +761,12 @@ Final Answers & \textbf{Orson Scott Card} (0.99), Neal Shusterman (0.96), Elisab
 \end{tabular}
 \vspace*{-0.2cm}
 \caption{A sample of the pipeline process when (correctly) answering a training question. \textbf{!} indicates particularly distinguishing features.}
+\label{fig:exEnder}
 \end{figure}
 
 \begin{figure}[t!]
 % increase table row spacing, adjust to taste
 \renewcommand{\arraystretch}{1.3}
-\label{tab:exIditarod}
 \centering
 \footnotesize
 \begin{tabular}{|p{1.8cm}p{6cm}|}
@@ -793,6 +802,7 @@ Final Answers & The 2000 Race of a Thousand Years (0.97), --01-03 (0.94), List o
 \end{tabular}
 \vspace*{-0.2cm}
 \caption{A sample of the pipeline process when (not quite correctly) answering a training question. \textbf{!} indicates particularly distinguishing features.}
+\label{fig:exIditarod}
 \end{figure}
 
 \end{document}
