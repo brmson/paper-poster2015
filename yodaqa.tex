@@ -55,7 +55,7 @@
 	Question Answering as a sub-field of information retrieval
 	and information extraction is recently enjoying renewed
 	popularity, triggered by the publicized success of IBM Watson in
-	the Jeopardy! competition.  But Question Answering research is
+	the Jeopardy!\ competition.  But Question Answering research is
 	now proceeding in several semi-independent tiers depending on the
 	precise task formulation and constraints on the knowledge base,
 	and new researchers entering the field can focus only on
@@ -217,7 +217,7 @@ we also put emphasis on aggressive compartmentalization
 of different tasks to interchangeable annotators rather than using
 UIMA just for high level flow and annotation storage.
 
-The framework is split in several Java packages: \textbf{io} takes care
+The framework is split in several Java packages: \textbf{io} package takes care
 of retrieving questions and returning answers, \textbf{pipeline} contains
 classes of the general pipeline stages, \textbf{analysis} contains
 modules for various analysis steps, \textbf{provider} has interfaces
@@ -228,7 +228,7 @@ with the flow as in Fig.~\ref{fig:arch}, encompassing the following stages:
 
 \begin{itemize}
 \item \textbf{Question Analysis} extracts natural language features from the question text and produces QA features based on them (clues, type, etc.).
-\item \textbf{Answer Production} generates candidate answers based on the question.
+\item \textbf{Answer Production} generates a set of candidate answers based on the question.
 	Typically, this happens by performing a \textbf{Primary Search} in the knowledge bases according to the question clues,
 	and either directly using search results as candidate answers
 	or filtering relevant passages from these (the \textbf{Passage Extraction})
@@ -238,7 +238,7 @@ with the flow as in Fig.~\ref{fig:arch}, encompassing the following stages:
 \item \textbf{Successive Refining} (optional) prunes the set of questions in multiple phases, interjecting some extra tasks (evidence diffusion and gathering additional evidence).
 \end{itemize}
 
-The basic pipeline flow is much inspired by the DeepQA model
+The basic pipeline flow is much inspired by the Deep\-QA model
 of IBM Watson \cite{WatsonPipeline}.  Throughout the flow, answer features
 are gradually accumulated and some results of early flow stages (especially
 the question analysis) are carried through the rest of the flow.
