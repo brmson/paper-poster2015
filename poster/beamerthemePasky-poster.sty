@@ -1,0 +1,74 @@
+\RequirePackage{tikz}
+\RequirePackage{ragged2e}
+\newcommand{\postermarker}[1]{\def\posterm@rker{#1}}
+\usefonttheme[onlymath]{serif}
+%\usefonttheme{serif}
+
+\def\beamer@typesetheadorfoot#1{% typeset the head or footline
+  {\parskip0pt %\offinterlineskip% <---- !!! commented out
+    \hbox{%
+      \hskip-\Gm@lmargin%
+      \hbox{%
+        \vbox{%
+          \@tempdima=\textwidth%
+          \textwidth=\paperwidth%
+          \hsize=\textwidth%
+          \def\\{,}%
+          \usebeamertemplate***{#1}%
+        }}%
+      \hskip-\Gm@rmargin%
+    }}\hfil%
+}
+
+\setbeamertemplate{headline}{
+        \vspace{20ex}
+  \begin{beamercolorbox}[wd=\textwidth]{headline}
+	%{\fontsize{100pt}{1em}\selectfont \bfseries \posterm@rker}%
+	\centering
+	\usebeamercolor{title in headline}{\color{fg}\huge{\textbf{\textrm{\inserttitle}}\par}}
+  \end{beamercolorbox}
+
+     \vspace{8ex}
+
+   \begin{beamercolorbox}[wd=\paperwidth]{headmeta}
+     \centering
+     \hspace{1em}\usebeamercolor{author in headline}{\Large {\bfseries\insertauthor} \hspace{1em} {\ttfamily\insertshortauthor}}
+
+     \vspace{5ex}
+     \hspace{1em}\usebeamercolor{institute in headline}{\normalsize \color{fg}\bfseries\insertinstitute}
+   \end{beamercolorbox}
+  
+  %\begin{beamercolorbox}[wd=\paperwidth]{lower separation line head}
+  %  \rule{0pt}{1em}
+  %\end{beamercolorbox}
+}
+
+\setbeamerfont{structure}{series=\bf,family=\sffamily}
+
+\setbeamertemplate{block begin}{
+  \vskip.75ex
+  \begin{beamercolorbox}[leftskip=1em,colsep*=.75ex]{block title}%
+    \usebeamerfont*{block title}\insertblocktitle
+  \end{beamercolorbox}%
+  {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
+  \usebeamerfont{block body}%
+  \begin{beamercolorbox}[colsep*=.75ex,sep=.75ex,vmode]{block body}%
+    \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+  \justifying%
+  }
+\setbeamertemplate{block end}{
+  \end{beamercolorbox}\vskip1ex
+}
+
+%\setbeamertemplate{itemize/enumerate body begin}{\vspace*{-1ex}}
+%\setbeamertemplate{itemize/enumerate body end}{\vspace*{-0.5ex}}
+
+\setbeamertemplate{itemize item}{$\blacktriangleright\,$}
+\setbeamertemplate{itemize subitem}{$\bullet$ }
+\setbeamerfont{block title}{size=\LARGE,series=\bf}
+\setbeamerfont{block body}{size=\normalsize}
+\setlength\leftmargini{4em}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamerfont{footline}{size=\small,family=\rmfamily}
+\setbeamertemplate{footline}{}
